@@ -1,11 +1,19 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import ContactForm from './ContactForm/ContactForm';
 import ContactList from './ContactList/ContactList';
 import Filter from './Filter/Filter';
+import ThemeContext from './ThemeContext/ThemeContext';
 
 const uuidv1 = require('uuid/v1');
 
 class App extends Component {
+  static get propTypes() {
+    return {
+      toggleTheme: PropTypes.func.isRequired,
+    };
+  }
+
   state = {
     contacts: [
       // { name: 'Rosie Simpson', number: '4591256', id: 'id-1' },
@@ -72,20 +80,41 @@ class App extends Component {
   render() {
     const { contacts, filter } = this.state;
     const visibleContacts = this.getVisibleContacts();
+    const { toggleTheme } = this.props;
 
     return (
-      <>
-        <h1>Phonebook</h1>
-        <ContactForm onSubmit={this.onSubmit} />
-        <h2>Contacts</h2>
-        {contacts.length > 1 && (
-          <Filter value={filter} onChangeFilter={this.changeFilter} />
+      <ThemeContext.Consumer>
+        {theme => (
+          <div
+            className="body"
+            style={{ background: theme.bodybg, color: theme.fontColor }}
+          >
+            <div className="theme-selector">
+              <label htmlFor="theme" className="switch">
+                <input
+                  type="checkbox"
+                  id="theme"
+                  checked={theme.type === 'light'}
+                  onChange={event => toggleTheme(event.currentTarget.value)}
+                />
+                <span className="slider round">
+                  Change to {theme.changeTo} theme
+                </span>
+              </label>
+            </div>
+            <h1>Phonebook</h1>
+            <ContactForm onSubmit={this.onSubmit} />
+            <h2>Contacts</h2>
+            {contacts.length > 1 && (
+              <Filter value={filter} onChangeFilter={this.changeFilter} />
+            )}
+            <ContactList
+              contacts={filter.length === 0 ? contacts : visibleContacts}
+              onRemove={this.removeContact}
+            />
+          </div>
         )}
-        <ContactList
-          contacts={filter.length === 0 ? contacts : visibleContacts}
-          onRemove={this.removeContact}
-        />
-      </>
+      </ThemeContext.Consumer>
     );
   }
 }
